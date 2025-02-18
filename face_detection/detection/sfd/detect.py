@@ -56,7 +56,9 @@ def detect(net, img, device):
     return bboxlist
 
 def batch_detect(net, imgs, device):
-    imgs = imgs - np.array([104, 117, 123])
+    # 將正規化值擴展到與批次相同的維度
+    mean = np.array([104, 117, 123])[None, None, None, :]
+    imgs = imgs - mean  # 現在可以正確地廣播
     imgs = imgs.transpose(0, 3, 1, 2)
 
     if 'cuda' in device:
@@ -85,7 +87,6 @@ def batch_detect(net, imgs, device):
             variances = [0.1, 0.2]
             box = batch_decode(loc, priors, variances)
             box = box[:, 0] * 1.0
-            # cv2.rectangle(imgshow,(int(x1),int(y1)),(int(x2),int(y2)),(0,0,255),1)
             bboxlist.append(torch.cat([box, score.unsqueeze(1)], 1).cpu().numpy())
     bboxlist = np.array(bboxlist)
     if 0 == len(bboxlist):
